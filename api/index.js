@@ -1,10 +1,11 @@
-import express            from 'express';
-import { fileURLToPath }  from 'url';
-import { dirname }        from 'path';
-import path               from 'path';
-var app                   = express();
-import cors               from 'cors';
-import { create, all }    from './dal.js';
+import express                               from 'express';
+import { fileURLToPath }                     from 'url';
+import { dirname }                           from 'path';
+import path                                  from 'path';
+var app                                      = express();
+import cors                                  from 'cors';
+import { create, all, transaction }          from './dal.js';
+import { fbSignup }                            from './fb.js';
 
 var port = 4000;
 
@@ -30,6 +31,18 @@ app.get('/account/all', function(req, res) {
     });
     
 });
+
+app.get('/account/transaction/:id/:amount', function (req, res) {
+  transaction(req.params.id, req.params.amount)
+    .then((docs) => {
+      res.send(docs);
+    })
+})
+
+app.get('/account/fb/create/:email/:password', function (req, res) {
+  fbSignup(req.params.email, req.params.password)
+    .then((user) => res.send(user))
+})
 
 app.listen(port, function(){
   console.log(`Running on Port: ${port}`);

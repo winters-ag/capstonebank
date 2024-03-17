@@ -32,20 +32,55 @@ export function create(name, email, password) {
   })
 }
 
-
 export function all(){
 
-
+  let accounts = [];
+  let transactions = [];
   return new Promise((resolve, reject) => {
     db.collection('users')
       .find({})
       .toArray()
       .then(docs => {
-        resolve(docs);
+        accounts = docs;
+        console.log(`Accounts Retrieved: ${accounts}`)
       })
       .catch(err => reject(err))
       .finally(() => {
-        console.log("connection closed")
+        console.log(`Accounts Retrieved`)
+      })
+
+    db.collection('transactions')
+      .find({})
+      .toArray()
+      .then(docs => {
+        transactions = docs;
+        console.log(`Transactions Retrieved: ${transactions}`)
+      })
+      .catch(err => reject(err))
+      .finally(() => {
+        console.log('transactions retrieved')
+      })
+    resolve({...accounts, ...transactions});
+  });
+}
+
+export function transaction(account, amount) {
+  return new Promise((resolve, reject) => {
+    const collection = db.collection('transactions');
+
+    const doc = {account, amount}
+    collection.insertOne(doc)
+      .then(result => {
+        console.log(`Inserted Transaction: ${doc}`)
+        resolve(doc);
+      })
+      .catch(err => reject(err))
+      .finally(() => {
+        console.log('transaction connection closed');
       })
   });
+}
+
+function updateAccount(account, amount) {
+  
 }
