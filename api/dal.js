@@ -19,10 +19,10 @@ function connect(){
   });
 }
 
-export function create(name, email, password) {
+export function create(name, email, password, fbId) {
   return new Promise((resolve,reject) =>{
     const collection = db.collection('users');
-    const doc = {name, email, password, balance:0};
+    const doc = {fbId, name, email, password, balance:0, transactions:[]};
     collection.insertOne(doc)
       .then(result => {
         console.log(`Inserted: ${doc}`)
@@ -42,25 +42,26 @@ export function all(){
       .toArray()
       .then(docs => {
         accounts = docs;
-        console.log(`Accounts Retrieved: ${accounts}`)
+        console.log(`Accounts Retrieved: ${docs}`)
+        resolve(docs);
       })
       .catch(err => reject(err))
       .finally(() => {
         console.log(`Accounts Retrieved`)
       })
 
-    db.collection('transactions')
-      .find({})
-      .toArray()
-      .then(docs => {
-        transactions = docs;
-        console.log(`Transactions Retrieved: ${transactions}`)
-      })
-      .catch(err => reject(err))
-      .finally(() => {
-        console.log('transactions retrieved')
-      })
-    resolve({...accounts, ...transactions});
+    // db.collection('transactions')
+    //   .find({})
+    //   .toArray()
+    //   .then(docs => {
+    //     transactions = docs;
+    //     console.log(`Transactions Retrieved: ${transactions}`)
+    //   })
+    //   .catch(err => reject(err))
+    //   .finally(() => {
+    //     console.log('transactions retrieved')
+    //   })
+    // resolve({...accounts, ...transactions});
   });
 }
 
