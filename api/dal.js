@@ -34,15 +34,12 @@ export function create(name, email, password, fbId) {
 
 export function all(){
 
-  let accounts = [];
-  let transactions = [];
   return new Promise((resolve, reject) => {
     db.collection('users')
       .find({})
       .toArray()
       .then(docs => {
-        accounts = docs;
-        console.log(`Accounts Retrieved: ${docs}`)
+        console.log(`Accounts Retrieved: ${JSON.stringify(docs)}`)
         resolve(docs);
       })
       .catch(err => reject(err))
@@ -50,38 +47,57 @@ export function all(){
         console.log(`Accounts Retrieved`)
       })
 
-    // db.collection('transactions')
-    //   .find({})
-    //   .toArray()
-    //   .then(docs => {
-    //     transactions = docs;
-    //     console.log(`Transactions Retrieved: ${transactions}`)
-    //   })
-    //   .catch(err => reject(err))
-    //   .finally(() => {
-    //     console.log('transactions retrieved')
-    //   })
-    // resolve({...accounts, ...transactions});
   });
 }
 
-export function transaction(account, amount) {
-  return new Promise((resolve, reject) => {
-    const collection = db.collection('transactions');
+export function transaction(account, amount, type) {
 
-    const doc = {account, amount}
-    collection.insertOne(doc)
-      .then(result => {
-        console.log(`Inserted Transaction: ${doc}`)
+  console.log(`ID: ${account}`);
+  const filter = {"fbId":account}
+  const timestamp = Date.now();
+  const delta = Number(amount);
+  var newBalance = 0;
+
+  db.collection('users')
+    .findOne(filter)
+    .then(result => {
+      newBalance = result.balance + delta;
+    })
+
+  return new Promise((resolve, reject) => {
+    db.collection('users')
+      .updateOne(filter, 
+        {
+          $inc: {
+            "balance":delta
+          },
+          $push: {
+            transactions:{
+              "amount":amount,
+              "date":timestamp,
+              "type":type,
+              "balance":newBalance
+            }
+          }
+        })
+      .then(data => {console.log(`Dal: ${JSON.stringify(data)}`)})
+      .catch(err => reject(err))
+      .finally(data => resolve(data))
+  })
+
+}
+
+export function getUser(account) {
+  console.log(`DAL account ID: ${account}`);
+  const filter = {"fbId":account}
+  return new Promise((resolve,reject) =>{
+    db.collection('users')
+      .findOne(filter)
+      .then(doc => {
+        console.log(JSON.stringify(doc));
         resolve(doc);
       })
-      .catch(err => reject(err))
-      .finally(() => {
-        console.log('transaction connection closed');
-      })
-  });
-}
-
-function updateAccount(account, amount) {
-  
+      .catch(err => console.log(err))
+      .finally(console.log('Dal GetUser Complete'))
+  })
 }

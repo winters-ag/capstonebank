@@ -4,9 +4,9 @@ import { dirname }                           from 'path';
 import path                                  from 'path';
 var app                                      = express();
 import cors                                  from 'cors';
-import { create, all, transaction }          from './dal.js';
-import { fbSignup }                          from './fb.js';
-import fbApp                                 from './admin.js';
+import { create, all, transaction, getUser }          from './dal.js';
+import { fbSignup, auth }                          from './fb.js';
+
 
 var port = 4000;
 
@@ -32,7 +32,7 @@ app.get('/auth', function(req, res){
 
 
   //verify token
-  fbApp.auth().verifyIdToken(idToken)
+  auth.verifyIdToken(idToken)
     .then(function(decodedToken) {
       console.log('decodedToken:', decodedToken);
       res.send('Authentication Success!');
@@ -40,7 +40,7 @@ app.get('/auth', function(req, res){
       console.log('error:',error);
       res.send('Authentication Fail!');
     });
-})
+});
 
 app.get('/account/all', function(req, res) {
   all().
@@ -49,17 +49,22 @@ app.get('/account/all', function(req, res) {
     });
 });
 
-app.get('/account/transaction/:id/:amount', function (req, res) {
-  transaction(req.params.id, req.params.amount)
+app.get('/account/:id', function (req, res) {
+  console.log(`index acct param ID: ${req.params.id}`)
+  getUser(req.params.id)
+    .then((doc) =>{
+      res.json(doc);
+    })
+    .catch(err => console.log(err));
+});
+
+app.get('/account/transaction/:id/:amount/:type', function (req, res) {
+  transaction(req.params.id, req.params.amount, req.params.type)
     .then((docs) => {
       res.send(docs);
-    })
-})
+    });
+});
 
-app.get('/account/createfb/:email/:password', function (req, res) {
-  fbSignup(req.params.email, req.params.password)
-    .then((user) => res.send(user))
-})
 
 app.listen(port, function(){
   console.log(`Running on Port: ${port}`);
