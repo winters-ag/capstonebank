@@ -1,103 +1,168 @@
-import { MongoClient }  from  'mongodb';
+import { MongoClient, ServerApiVersion }  from  'mongodb';
+import 'dotenv/config';
  
-const url  = 'mongodb://localhost:27017';
-let db     = null;
-let client = null;
+const url               = process.env.ATLASURL;
+const project           = process.env.MONGOPROJECT;
+const mongoColl       = process.env.MONGOCOLLECTION;
 
-MongoClient.connect(url)
-  .then(client => {
-    console.log("Connected successfully to db server");
+const client = new MongoClient(url, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  }
+});
 
-    db = client.db('myproject');
-  });
+async function run() {
+  try {
+    await client.connect();
 
-function connect(){
-  MongoClient.connect(url)
-  .then(res => {
-    console.log("Connected successfully to db server");
-    return res;
-  });
+    await client.db("admin").command({ ping:1 });
+    console.log("Pinged your deployment. Successfully connected to MongoDB!")
+  } finally {
+    await client.close();
+  }
 }
 
-export function create(name, email, password, fbId) {
+run().catch(console.dir);
+
+export async function create(name, email, password, fbId) {
+
+  const doc = {
+    fbId, 
+    name, 
+    email, 
+    password, 
+    savingsbalance:0,
+    checkingbalance:0, 
+    savings:true,
+    checking:false,
+    savingstransactions:[],
+    checkingtransactions:[]
+  };
+
+
+  try{
+    await client.connect();
+    console.log('connected to atlas');
+
+    const db              = client.db(project);
+    const collection      = db.collection(mongoColl);
+
+    return new Promise((resolve,reject) =>{
+      collection.insertOne(doc)
+        .then(result => {
+          console.log(`Inserted: ${doc}`)
+          resolve(result);
+        })
+        .catch((error) => reject(error))
+        .finally(() => {
+          client.close();
+        })
+    })
+  } catch (error) {
+    console.error(error);
+    throw error;
+  } 
+
+}
+
+export async function all(){
+
+  try {
+    await client.connect();
+    const db = client.db(project);
+
+    return new Promise((resolve, reject) => {
+      db.collection(mongoColl)
+        .find({})
+        .toArray()
+        .then(docs => {
+          resolve(docs);
+        })
+        .catch(err => reject(err))
+        .finally(() => {
+          client.close();
+          console.log(`Accounts Retrieved`)
+        })
+  });
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+
+export async function transaction(accountId, amount, type) {
+
+  try{
+    await client.connect();
+    const db = client.db(project);
+
+    const filter = {"fbId":accountId}
+    const timestamp = Date.now();
+    const formatter = new Intl.DateTimeFormat('en-US', {dateStyle: 'long'})
+    const formattedTime = formatter.format(timestamp);
+    const delta = Number(amount);
+    var newBalance = 0;
+  
+    var currAcct = await db.collection(mongoColl).findOne(filter)
+    newBalance = currAcct.savingsbalance + delta;      
+  
+    return new Promise((resolve, reject) => {
+      db.collection(mongoColl)
+        .updateOne(filter, 
+          {
+            $inc: {
+              "savingsbalance":delta
+            },
+            $push: {
+              savingstransactions:{
+                "amount":amount,
+                "date":formattedTime,
+                "type":type,
+                "balance":newBalance
+              }
+            }
+          })
+        .then(data => {
+          resolve(data);
+          console.log(`Dal: ${JSON.stringify(data)}`)
+        })
+        .catch(err => reject(err))
+        .finally(() => {
+          client.close();
+          console.log('connection closed');
+        })
+    })
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+
+export async function getUser(account) {
+
+  try{
+  await client.connect();
+  const db = client.db(project);
+  console.log(`DAL account ID: ${account}`);
+  const filter = {"fbId":account}
+
+
   return new Promise((resolve,reject) =>{
-    const collection = db.collection('users');
-    const doc = {fbId, name, email, password, balance:0, transactions:[]};
-    collection.insertOne(doc)
-      .then(result => {
-        console.log(`Inserted: ${doc}`)
+    db.collection(mongoColl)
+      .findOne(filter)
+      .then(doc => {
         resolve(doc);
-      })
-      .catch(() => reject(error));
-  })
-}
-
-export function all(){
-
-  return new Promise((resolve, reject) => {
-    db.collection('users')
-      .find({})
-      .toArray()
-      .then(docs => {
-        console.log(`Accounts Retrieved: ${JSON.stringify(docs)}`)
-        resolve(docs);
       })
       .catch(err => reject(err))
       .finally(() => {
-        console.log(`Accounts Retrieved`)
+        client.close();
+        console.log('Dal GetUser Complete')
       })
-
-  });
-}
-
-export function transaction(account, amount, type) {
-
-  console.log(`ID: ${account}`);
-  const filter = {"fbId":account}
-  const timestamp = Date.now();
-  const delta = Number(amount);
-  var newBalance = 0;
-
-  db.collection('users')
-    .findOne(filter)
-    .then(result => {
-      newBalance = result.balance + delta;
-    })
-
-  return new Promise((resolve, reject) => {
-    db.collection('users')
-      .updateOne(filter, 
-        {
-          $inc: {
-            "balance":delta
-          },
-          $push: {
-            transactions:{
-              "amount":amount,
-              "date":timestamp,
-              "type":type,
-              "balance":newBalance
-            }
-          }
-        })
-      .then(data => {console.log(`Dal: ${JSON.stringify(data)}`)})
-      .catch(err => reject(err))
-      .finally(data => resolve(data))
   })
-
-}
-
-export function getUser(account) {
-  console.log(`DAL account ID: ${account}`);
-  const filter = {"fbId":account}
-  return new Promise((resolve,reject) =>{
-    db.collection('users')
-      .findOne(filter)
-      .then(doc => {
-        console.log(JSON.stringify(doc));
-        resolve(doc);
-      })
-      .catch(err => console.log(err))
-      .finally(console.log('Dal GetUser Complete'))
-  })
+  } catch(error) {
+    console.error(error);
+    throw error;
+  }
 }

@@ -46,7 +46,8 @@ app.get('/account/all', function(req, res) {
   all().
     then((docs) => {
       res.send(docs);
-    });
+    })
+    .catch(error => console.log(error));
 });
 
 app.get('/account/:id', function (req, res) {
