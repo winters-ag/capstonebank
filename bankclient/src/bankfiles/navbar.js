@@ -86,12 +86,7 @@ function BankNav() {
                 </Navbar.Brand>
                 <Navbar.Toggle aria-controls="basic-navbar-nav" />
                 <Navbar.Collapse id="basic-navbar-nav">
-                  <Nav className="me-auto">
-                    <Nav.Link>
-                      <TriggerExample tooltip="View all data on this page">
-                        <Link className="nav-link" to="/alldata">All Data</Link>
-                      </TriggerExample>
-                    </Nav.Link>    
+                  <Nav className="me-auto">   
                     <Nav.Link>
                       <TriggerExample tooltip="View all data on this page">
                         <Link className="nav-link" to="/login">Login</Link>
