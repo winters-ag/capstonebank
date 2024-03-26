@@ -1,0 +1,9 @@
+[
+  {
+    "id": 1,
+    "email": "test@mit.edu",
+    "name": "Alan Winters",
+    "password": "password",
+    "balance":500
+  }
+]

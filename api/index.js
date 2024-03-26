@@ -13,7 +13,7 @@ var port = 4000;
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 
-app.use(express.static(path.join(__dirname, '../badbank/build')));
+app.use(express.static(path.join(__dirname, '../bankclient/build')));
 app.use(cors());
 
 
