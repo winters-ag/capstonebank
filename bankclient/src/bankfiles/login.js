@@ -43,7 +43,9 @@ function Login() {
                 .then(data => {
                   console.log(JSON.stringify(data));
                   window.location.href ="/";
-                });
+                })
+            } else {
+              window.location.href ="/";
             }
           });
       }).catch((error) => {
