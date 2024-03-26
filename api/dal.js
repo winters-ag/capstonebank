@@ -166,3 +166,31 @@ export async function getUser(account) {
     throw error;
   }
 }
+
+export async function checkUser(account) {
+
+  try{
+  await client.connect();
+  const db = client.db(project);
+  console.log(`DAL account ID: ${account}`);
+  const filter = {"fbId":account}
+
+
+  return new Promise((resolve,reject) =>{
+    db.collection(mongoColl)
+      .findOne(filter)
+      .then(doc => {
+        if(doc === null) resolve(false);
+        resolve(true);
+      })
+      .catch(err => reject(err))
+      .finally(() => {
+        client.close();
+        console.log('Dal GetUser Complete')
+      })
+  })
+  } catch(error) {
+    console.error(error);
+    throw error;
+  }
+}

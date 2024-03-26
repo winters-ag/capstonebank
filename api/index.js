@@ -4,7 +4,7 @@ import { dirname }                           from 'path';
 import path                                  from 'path';
 var app                                      = express();
 import cors                                  from 'cors';
-import { create, all, transaction, getUser }          from './dal.js';
+import { create, all, transaction, getUser, checkUser }          from './dal.js';
 import { fbSignup, auth }                          from './fb.js';
 
 
@@ -66,6 +66,19 @@ app.get('/account/transaction/:id/:amount/:type', function (req, res) {
     });
 });
 
+app.get('/account/check/:id', function (req, res) {
+  console.log(`index acct param ID: ${req.params.id}`)
+  checkUser(req.params.id)
+    .then((doc) =>{
+      console.log(`Index user Check: ${doc}`)
+      if(doc === false) {
+        res.sendStatus(202);
+      } else {
+        res.sendStatus(200);
+      }
+    })
+    .catch(err => console.log(err));
+});
 
 app.listen(port, function(){
   console.log(`Running on Port: ${port}`);
