@@ -37,7 +37,6 @@ function CreateAccount() {
   }
 
   function handleCreate() {
-    let id = ctx.accounts.at(-1).id + 1;
     if (!validate(name,    'name'))          return;
     if (!validate(email,   'email'))         return;
     if (!validate(password,   'password'))   return;
