@@ -52,7 +52,7 @@ function Alldata() {
                     bgcolor="success"
                     header={`Account ID: ${item.fbId} || Email:  ${item.email}`}
                     body={`Account Name: ${item.name} || Balance: ${item.savingsbalance}`}
-                    footer={`Number on transactions: ${item.savingstransactions.length()}`}
+                    footer={`Number on transactions: ${item.savingstransactions.length}`}
                   />
                 })
               }
